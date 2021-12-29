@@ -1,19 +1,20 @@
+import sys
+from moviepy.editor import *
 import pygame
 import os
-
-
 
 FPS = 120
 pygame.init()
 size = width, height = 1920, 1080
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-running = True
+# running = True
+
 
 def load_image(name, color_key=None):
     full_name = os.path.join('data', name)
     if not os.path.isfile(full_name):
-        raise FileNotFoundError(f"Файл {full_name} yt yfqltyj")
+        raise FileNotFoundError(f"Файл {full_name} не найден")
     image = pygame.image.load(full_name)
     if color_key is not None:
         image = image.convert()
@@ -37,6 +38,7 @@ def load_level(filename):
     # дополняем каждую строку пустыми клетками ('.')
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
+
 collaid = load_image('Tile_02.png')
 c = pygame.transform.scale(collaid, (100, 100))
 i = load_image('idle.png')
@@ -52,6 +54,8 @@ car_image = car
 
 tile_width = 100
 tile_height = 50
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
@@ -104,6 +108,7 @@ class Player(pygame.sprite.Sprite):
     right = True
     dx = (tile_width - player_image.get_width()) // 2
     dy = (tile_height - player_image.get_height()) // 4
+
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
         self.image = player_image
@@ -115,33 +120,34 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, *args, **kwargs):
         keys = pygame.key.get_pressed()
-        #self.calc_grav()
+        # self.calc_grav()
         if keys[pygame.K_LEFT] and self.rect.x:  # > -10:
             self.rect.x -= 15
-            if (self.right):
+            if self.right:
                 self.flip()
                 self.right = False
         if keys[pygame.K_RIGHT] and self.rect.x:  # < 1900:
             self.rect.x += 15
-            if (not self.right):
+            if not self.right:
                 self.flip()
                 self.right = True
 
-        if not (self.isjump):
-                if keys[pygame.K_DOWN] and self.rect.y:
-                    self.rect.y += 15
-                if keys[pygame.K_UP]:
-                    self.isjump = True
+        if not self.isjump:
+            if keys[pygame.K_DOWN] and self.rect.y:
+                self.rect.y += 15
+            if keys[pygame.K_UP]:
+                self.isjump = True
         else:
-                if self.jumpcount >= -10:
-                    if self.jumpcount < 0:
-                        self.rect.y += (self.jumpcount ** 2) // 2
-                    else:
-                        self.rect.y -= (self.jumpcount ** 2) // 2
-                    self.jumpcount -= 1
+            if self.jumpcount >= -10:
+                if self.jumpcount < 0:
+                    self.rect.y += (self.jumpcount ** 2) // 2
                 else:
-                    self.isjump = False
-                    self.jumpcount = 10
+                    self.rect.y -= (self.jumpcount ** 2) // 2
+                self.jumpcount -= 1
+            else:
+                self.isjump = False
+                self.jumpcount = 10
+
     def flip(self):
         self.image = pygame.transform.flip(self.image, True, False)
 
@@ -153,6 +159,7 @@ class Player(pygame.sprite.Sprite):
         if self.rect.y >= height - self.rect.height and self.rect.y >= 0:
             self.rect.y = 0
             self.rect.y = height - self.rect.height
+
 
 def generate_level(level):
     new_player, x, y = None, None, None
@@ -176,8 +183,6 @@ player_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 
 
-
-
 class Camera:
     # зададим начальный сдвиг камеры
     def __init__(self):
@@ -195,18 +200,104 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 1.2)
 
 
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+small_font = pygame.font.SysFont('comicsansms', 25)
+medium_font = pygame.font.SysFont('comicsansms', 50)
+large_font = pygame.font.SysFont('comicsansms', 80)
+
+
+def text_object(text, color, greatness):
+    if greatness == 'small':
+        text_surface = small_font.render(text, True, color)
+    elif greatness == 'small':
+        text_surface = medium_font.render(text, True, color)
+    else:
+        text_surface = large_font.render(text, True, color)
+
+    return text_surface, text_surface.get_rect()
+
+
+def message_to_screen(msg, color, y_displace=0, greatness='small'):
+    text_surf, text_rect = text_object(msg, color, greatness)
+    text_rect.center = (width / 2), (height / 2) + y_displace
+    screen.blit(text_surf, text_rect)
+
+
+def play_first_video():
+    movie = pygame.movie.Movie('MELT.MPG')
+    # screen = pygame.display.set_mode(movie.get_size())
+    # movie_screen = pygame.Surface(movie.get_size()).convert()
+    # movie.set_display(movie_screen)
+    # movie.play()
+    # playing = True
+    # while playing:
+    #     for event in pygame.event.get():
+    #         if event.type == pygame.QUIT:
+    #             movie.stop()
+    #             playing = False
+    #     screen.blit(movie_screen,(0,0))
+    #     pygame.display.update()
+    #     clock.tick(FPS)
+    # pygame.quit()
+
+preview = True
+
+
+def play_preview():
+    video = VideoFileClip('data/final1.mp4')
+    clip_resized = video.resize(height=900)
+    global preview
+    while preview:
+        keys = pygame.key.get_pressed()
+        clip_resized.preview(fps=15, fullscreen=True)
+        for event in pygame.event.get():
+            if keys[pygame.K_n]:
+                preview = False
+                break
+                return
+
+
+def start_screen():
+    while True:
+        keys = pygame.key.get_pressed()
+        screen.fill('black')
+        message_to_screen('Welcome to THE RETURNING OF EVIL',
+                          'white',
+                          -100,
+                          'large')
+        message_to_screen('Meet people, talk with them, complete their tasks and save the world!',
+                          'white',
+                          -30)
+        message_to_screen('Press Y to start or Escape to quit.',
+                          'white',
+                          180)
+        for event in pygame.event.get():
+            if keys[pygame.K_ESCAPE] or event.type == pygame.QUIT:
+                terminate()
+            if keys[pygame.K_y]:
+                play_preview()
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
 player, level_x, level_y = generate_level(load_level('map.txt'))
 camera = Camera()
-while running:
+start_screen()
+while True:
     keys = pygame.key.get_pressed()
     bg = load_image('bg.jpg')
     bg1 = pygame.transform.scale(bg, (width, height))
     for event in pygame.event.get():
         all_sprites.update(event)
         if event.type == pygame.QUIT:
-            running = False
+            terminate()
         if keys[pygame.K_ESCAPE]:
-            running = False
+            terminate()
         if event.type == pygame.KEYDOWN:
             player_group.update(event)
     screen.blit(bg1, (0, 0))
@@ -218,8 +309,5 @@ while running:
     tiles_group.draw(screen)
     player_group.draw(screen)
     pygame.display.flip()
-
     clock.tick(FPS)
     print(clock.tick(FPS))
-
-
