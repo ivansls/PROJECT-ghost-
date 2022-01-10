@@ -8,7 +8,7 @@ pygame.init()
 size = width, height = 1920, 1080
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-# running = True
+current_level = 1
 
 
 def load_image(name, color_key=None):
@@ -40,17 +40,50 @@ def load_level(filename):
 
 
 collaid = load_image('Tile_02.png')
-c = pygame.transform.scale(collaid, (100, 100))
-i = load_image('idle.png')
-idle = pygame.transform.scale(i, (100, 100))
-car = load_image('car-full.png')
-tile_images = {
-    'wall': c,
-    'empty': load_image('idle2.png'),
-    'object': car
+earth = pygame.transform.scale(collaid, (100, 100))
+player = load_image('idle.png')
+idle = pygame.transform.scale(player, (100, 100))
+big_accurate_tree = pygame.transform.scale(load_image('big_tree.png'), (350, 500))
+small_accurate_tree = pygame.transform.scale(load_image('small_tree.png'), (200, 200))
+big_tree_disheveled = pygame.transform.scale(load_image('big_tree_1.png'), (450, 600))
+small_tree_disheveled = pygame.transform.scale(load_image('small_tree_1.png'), (200, 200))
+barrel = pygame.transform.scale(load_image('barrel.png'), (50, 50))
+pit = pygame.transform.scale(load_image('pit.png'), (300, 200))
+pitchers = load_image('pitchers.png')
+bush_accurate = load_image('bush.png')
+bush_disheveled = load_image('bush1.png')
+sunflowers = pygame.transform.scale(load_image('sunflowers.png'), (150, 100))
+scarecrows = load_image('scarecrows.png')
+wheat = load_image('wheat.png')
+bench = load_image('bench.png')
+logs = pygame.transform.scale(load_image('logs.png'), (250, 250))
+pumpkins = pygame.transform.scale(load_image('pumpkins.png'), (150, 100))
+signpost = pygame.transform.scale(load_image('signpost.png'), (80, 150))
+house1 = load_image('house2.png')
+house2 = load_image('house3.png')
+tile_images_for_first_level = {
+    'wall': earth,
+    'big_accurate_tree': big_accurate_tree,
+    'small_accurate_tree': small_accurate_tree,
+    'big_tree_disheveled': big_tree_disheveled,
+    'small_tree_disheveled': small_tree_disheveled,
+    'barrel': barrel,
+    'pit': pit,
+    'pitchers': pitchers,
+    'bush_accurate': bush_accurate,
+    'bush_disheveled': bush_disheveled,
+    'sunflowers': sunflowers,
+    'scarecrows': scarecrows,
+    'wheat': wheat,
+    'bench': bench,
+    'logs': logs,
+    'pumpkins': pumpkins,
+    'signpost': signpost,
+    'house1': house1,
+    'house2': house2
 }
 player_image = idle
-car_image = car
+
 
 tile_width = 100
 tile_height = 50
@@ -59,7 +92,7 @@ tile_height = 50
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
-        self.image = tile_images[tile_type]
+        self.image = tile_images_for_first_level[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
 
@@ -169,11 +202,44 @@ def generate_level(level):
             #     Tile('empty', x, y)
             if level[y][x] == '#':
                 Tile('wall', x, y)
-            elif level[y][x] == '@':
-                Tile('empty', x, y)
-                new_player = Player(x, y)
             elif level[y][x] == '*':
-                Tile('object', x, 20)
+                Tile('pit', x, 21.6)
+                new_player = Player(x, y)
+            elif level[y][x] == "[":
+                Tile('barrel', x, 24.1)
+            elif level[y][x] == '{':
+                Tile('house1', x, 15)
+            elif level[y][x] == '+':
+                Tile('signpost', x + 0.3, 22.8)
+            elif level[y][x] == '"':
+                Tile('pitchers', x - 1, 24.23)
+            elif level[y][x] == ':':
+                Tile('logs', x, 21.6)
+            elif level[y][x] == "'":
+                Tile('house2', x, 15)
+            elif level[y][x] == ")":
+                Tile('big_accurate_tree', x, 16)
+            elif level[y][x] == "(":
+                Tile('big_tree_disheveled', x, 14)
+            elif level[y][x] == "/":
+                Tile('bench', x, 24.1)
+            elif level[y][x] == "!":
+                Tile('pumpkins', x, 23.6)
+            elif level[y][x] == "-":
+                Tile('sunflowers', x, 23.4)
+            elif level[y][x] == "=":
+                Tile('scarecrows', x, 23)
+            elif level[y][x] == "]":
+                Tile('bush_accurate', x, 24.3)
+            elif level[y][x] == "?":
+                Tile('wheat', x, 23.4)
+            elif level[y][x] == "l":
+                Tile('bush_disheveled', x, 24.1)
+            elif level[y][x] == "f":
+                Tile('small_tree_disheveled', x, 21.3)
+            elif level[y][x] == "v":
+                Tile('small_accurate_tree', x, 21.5)
+
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
@@ -227,40 +293,6 @@ def message_to_screen(msg, color, y_displace=0, greatness='small'):
     screen.blit(text_surf, text_rect)
 
 
-def play_first_video():
-    movie = pygame.movie.Movie('MELT.MPG')
-    # screen = pygame.display.set_mode(movie.get_size())
-    # movie_screen = pygame.Surface(movie.get_size()).convert()
-    # movie.set_display(movie_screen)
-    # movie.play()
-    # playing = True
-    # while playing:
-    #     for event in pygame.event.get():
-    #         if event.type == pygame.QUIT:
-    #             movie.stop()
-    #             playing = False
-    #     screen.blit(movie_screen,(0,0))
-    #     pygame.display.update()
-    #     clock.tick(FPS)
-    # pygame.quit()
-
-preview = True
-
-
-def play_preview():
-    video = VideoFileClip('data/final1.mp4')
-    clip_resized = video.resize(height=900)
-    global preview
-    while preview:
-        keys = pygame.key.get_pressed()
-        clip_resized.preview(fps=15, fullscreen=True)
-        for event in pygame.event.get():
-            if keys[pygame.K_n]:
-                preview = False
-                break
-                return
-
-
 def start_screen():
     while True:
         keys = pygame.key.get_pressed()
@@ -279,18 +311,19 @@ def start_screen():
             if keys[pygame.K_ESCAPE] or event.type == pygame.QUIT:
                 terminate()
             if keys[pygame.K_y]:
-                play_preview()
-
+                return
         pygame.display.flip()
         clock.tick(FPS)
 
 
-player, level_x, level_y = generate_level(load_level('map.txt'))
+if current_level == 1:
+    player, level_x, level_y = generate_level(load_level('map.txt'))
 camera = Camera()
 start_screen()
 while True:
     keys = pygame.key.get_pressed()
-    bg = load_image('bg.jpg')
+    if current_level == 1:
+        bg = load_image('b3_first.jpg')
     bg1 = pygame.transform.scale(bg, (width, height))
     for event in pygame.event.get():
         all_sprites.update(event)
