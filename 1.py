@@ -9,7 +9,7 @@ size = width, height = 1920, 1080
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 current_level = 1
-
+anim_sprite = pygame.sprite.Group()
 
 def load_image(name, color_key=None):
     full_name = os.path.join('data', name)
@@ -38,6 +38,33 @@ def load_level(filename):
     # дополняем каждую строку пустыми клетками ('.')
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
+class AnimatedSprite(pygame.sprite.Sprite):
+    def __init__(self, sheet, columns, rows, x, y, fps):
+        super().__init__(anim_sprite)
+        self.frames = []
+        self.cut_sheet(sheet, columns, rows)
+        self.cur_frame = 0
+        self.counter = 0
+        self.limit = FPS // fps
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(x, y)
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
+        for i in range(rows):
+            for j in range(columns):
+                frame_location = (self.rect.w * j, self.rect.h * i)
+                self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+
+    def update(self):
+        self.counter += 1
+        if self.counter == self.limit:
+            self.counter = 0
+            self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+            self.image = self.frames[self.cur_frame]
+
+dragon = AnimatedSprite(load_image("B_witch_idle.png"), 1, 6, 50, 50, 10)
+
 
 collaid = load_image('Tile_02.png')
 earth = pygame.transform.scale(collaid, (100, 100))
@@ -61,6 +88,8 @@ pumpkins = pygame.transform.scale(load_image('pumpkins.png'), (150, 100))
 signpost = pygame.transform.scale(load_image('signpost.png'), (80, 150))
 house1 = load_image('house2.png')
 house2 = load_image('house3.png')
+witch = load_image('B_witch_idle.png')
+witch1 = pygame.transform.scale(witch, (100, 100))
 tile_images_for_first_level = {
     'wall': earth,
     'big_accurate_tree': big_accurate_tree,
@@ -80,7 +109,8 @@ tile_images_for_first_level = {
     'pumpkins': pumpkins,
     'signpost': signpost,
     'house1': house1,
-    'house2': house2
+    'house2': house2,
+    "witch": witch1
 }
 player_image = idle
 
@@ -147,6 +177,7 @@ class Player(pygame.sprite.Sprite):
         self.image = player_image
         self.rect = self.image.get_rect().move(tile_width * pos_x + Player.dx,
                                                tile_height * (pos_y - 0.5) + Player.dy)
+        print(self.rect)
         self.moving = True
         self.isjump = False
         self.jumpcount = 10
@@ -194,6 +225,27 @@ class Player(pygame.sprite.Sprite):
             self.rect.y = height - self.rect.height
 
 
+# class NPC_One(pygame.sprite.Sprite):
+#     dx = (tile_width - player_image.get_width()) // 2
+#     dy = (tile_height - player_image.get_height()) // 4
+#
+#     # def __init__(self, pers_groups):
+#     #     super().__init__(pers_groups)
+#     #     self.image = NPC_One.image
+#     #     self.rect = self.image.get_rect()
+#
+#     def __init__(self, pos_x, pos_y):
+#         image3 = load_image('witch.png')
+#         super().__init__(player_group, all_sprites)
+#         self.image = image3
+#         self.rect = self.image.get_rect().move(tile_width * pos_x + Player.dx,
+#                                                tile_height * (pos_y - 0.5) + Player.dy)
+
+
+
+pers_groups = pygame.sprite.Group()
+
+
 def generate_level(level):
     new_player, x, y = None, None, None
     for y in range(len(level)):
@@ -239,6 +291,9 @@ def generate_level(level):
                 Tile('small_tree_disheveled', x, 21.3)
             elif level[y][x] == "v":
                 Tile('small_accurate_tree', x, 21.5)
+            elif level[y][x] == "w":
+                # a = AnimatedSprite(witch1, 1, 6, x, 23.31, 10)
+                Tile("witch", x, 23.31, )
 
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
@@ -264,6 +319,7 @@ class Camera:
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 1.2)
+
 
 
 def terminate():
@@ -342,5 +398,7 @@ while True:
     tiles_group.draw(screen)
     player_group.draw(screen)
     pygame.display.flip()
+    anim_sprite.draw(screen)
+    anim_sprite.update()
     clock.tick(FPS)
     print(clock.tick(FPS))
