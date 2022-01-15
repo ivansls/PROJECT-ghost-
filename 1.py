@@ -8,8 +8,9 @@ pygame.init()
 size = width, height = 1920, 1080
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-current_level = 1
+current_level = 2
 anim_sprite = pygame.sprite.Group()
+
 
 def load_image(name, color_key=None):
     full_name = os.path.join('data', name)
@@ -38,6 +39,7 @@ def load_level(filename):
     # дополняем каждую строку пустыми клетками ('.')
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
+
 class AnimatedSprite(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y, fps):
         super().__init__(anim_sprite)
@@ -63,8 +65,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
             self.cur_frame = (self.cur_frame + 1) % len(self.frames)
             self.image = self.frames[self.cur_frame]
 
-dragon = AnimatedSprite(load_image("B_witch_idle.png"), 1, 6, 50, 50, 10)
 
+dragon = AnimatedSprite(load_image("B_witch_idle.png"), 1, 6, 50, 50, 10)
 
 collaid = load_image('Tile_02.png')
 earth = pygame.transform.scale(collaid, (100, 100))
@@ -88,7 +90,7 @@ pumpkins = pygame.transform.scale(load_image('pumpkins.png'), (150, 100))
 signpost = pygame.transform.scale(load_image('signpost.png'), (80, 150))
 house1 = load_image('house2.png')
 house2 = load_image('house3.png')
-witch = load_image('B_witch_idle.png')
+witch = load_image('witch.png')
 witch1 = pygame.transform.scale(witch, (100, 100))
 tile_images_for_first_level = {
     'wall': earth,
@@ -112,8 +114,37 @@ tile_images_for_first_level = {
     'house2': house2,
     "witch": witch1
 }
+earth_2 = pygame.transform.scale(load_image('small_earth.png'), (250, 200))
+stone_1 = load_image('stone_1.png')
+branch_with_thorns_1 = load_image('branch_with_thorns.png')
+plant_1 = load_image('plant_1.png')
+plant_2 = load_image('plant_2.png')
+plant_3 = load_image('plant_3.png')
+plant_4 = load_image('plant_4.png')
+plant_5 = load_image('plant_5.png')
+plant_6 = load_image('plant_6.png')
+plant_column = load_image('plant_column.png')
+stone_2 = load_image('stone_2.png')
+stone_3 = load_image('stone_3.png')
+blue_flower = load_image('Bluef.png')
+plant_7 = load_image('jump_p.png')
+tile_images_for_second_level = {
+    'wall': earth_2,
+    'stone_1': stone_1,
+    'branch_with_thorns_1': branch_with_thorns_1,
+    'plant_1': plant_1,
+    'blue_flower': blue_flower,
+    'plant_7': plant_7,
+    'plant_2': plant_2,
+    'plant_3': plant_3,
+    'plant_4': plant_4,
+    'plant_5': plant_5,
+    'plant_6': plant_6,
+    'plant_column': plant_column,
+    'stone_2': stone_2,
+    'stone_3': stone_3
+}
 player_image = idle
-
 
 tile_width = 100
 tile_height = 50
@@ -122,7 +153,10 @@ tile_height = 50
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
-        self.image = tile_images_for_first_level[tile_type]
+        if current_level == 1:
+            self.image = tile_images_for_first_level[tile_type]
+        elif current_level == 2:
+            self.image = tile_images_for_second_level[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
 
@@ -242,7 +276,6 @@ class Player(pygame.sprite.Sprite):
 #                                                tile_height * (pos_y - 0.5) + Player.dy)
 
 
-
 pers_groups = pygame.sprite.Group()
 
 
@@ -293,11 +326,51 @@ def generate_level(level):
                 Tile('small_accurate_tree', x, 21.5)
             elif level[y][x] == "w":
                 # a = AnimatedSprite(witch1, 1, 6, x, 23.31, 10)
-                Tile("witch", x, 23.31, )
-
+                Tile("witch", x, 23.31)
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
+
+def generate_level_2(level):
+    new_player, x, y = None, None, None
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            # if level[y][x] == '.':
+            #     Tile('empty', x, y)
+            # new_player = Player(x, y)
+            if level[y][x] == '%':
+                new_player = Player(x, 24.5)
+            elif level[y][x] == '#':
+                Tile('wall', x, y)
+            elif level[y][x] == '[':
+                Tile('stone_1', x, 10)
+            elif level[y][x] == '|':
+                Tile('plant_column', x, 1)
+            elif level[y][x] == ')':
+                Tile('branch_with_thorns_1', x, 12)
+            elif level[y][x] == '+':
+                Tile('plant_1', x, 19)
+            elif level[y][x] == 'p':
+                Tile('plant_2', x, 19)
+            elif level[y][x] == ']':
+                Tile('stone_2', x, 9)
+            elif level[y][x] == '*':
+                Tile('plant_3', x, 19)
+            elif level[y][x] == '-':
+                Tile('plant_4', x, 17)
+            elif level[y][x] == '&':
+                Tile('blue_flower', x, 10)
+            elif level[y][x] == '^':
+                Tile('stone_3', x, 9)
+            elif level[y][x] == '$':
+                Tile('plant_5', x, 17)
+            elif level[y][x] == '@':
+                Tile('plant_6', x, 16)
+            elif level[y][x] == '!':
+                Tile('plant_7', x, 19)
+
+
+    return new_player, x, y
 
 all_sprites = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
@@ -319,7 +392,6 @@ class Camera:
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 1.2)
-
 
 
 def terminate():
@@ -374,12 +446,16 @@ def start_screen():
 
 if current_level == 1:
     player, level_x, level_y = generate_level(load_level('map.txt'))
+elif current_level == 2:
+    player, lavel_x, level_y = generate_level_2(load_level('map_2.txt'))
 camera = Camera()
 start_screen()
 while True:
     keys = pygame.key.get_pressed()
     if current_level == 1:
         bg = load_image('b3_first.jpg')
+    elif current_level == 2:
+        bg = load_image('fon_2lvl.jpg')
     bg1 = pygame.transform.scale(bg, (width, height))
     for event in pygame.event.get():
         all_sprites.update(event)
