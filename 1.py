@@ -1,4 +1,3 @@
-import sys
 from moviepy.editor import *
 import pygame
 import os
