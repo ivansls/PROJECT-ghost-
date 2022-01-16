@@ -478,6 +478,15 @@ while True:
             terminate()
         if keys[pygame.K_ESCAPE]:
             terminate()
+        if keys[pygame.K_1]:
+            current_level = 1
+            player, level_x, level_y = generate_level(load_level('map.txt'))
+        if keys[pygame.K_2]:
+            current_level = 2
+            player, lavel_x, level_y = generate_level_2(load_level('map_2.txt'))
+        if keys[pygame.K_3]:
+            current_level = 3
+            player, lavel_x, level_y = generate_level_3(load_level('map_3.txt'))
         if event.type == pygame.KEYDOWN:
             player_group.update(event)
     screen.blit(bg1, (0, 0))
