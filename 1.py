@@ -7,7 +7,7 @@ pygame.init()
 size = width, height = 1920, 1080
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-current_level = 2
+current_level = 1
 anim_sprite = pygame.sprite.Group()
 
 
@@ -143,6 +143,36 @@ tile_images_for_second_level = {
     'stone_2': stone_2,
     'stone_3': stone_3
 }
+earth_3 = load_image('floor_2.png')
+hill = load_image('hill.png')
+rock_1 = load_image('rock_1.png')
+rock_2 = load_image('rock_2.png')
+small_pl = load_image('small_pl.png')
+grass = load_image('Grass.png')
+grass_2 = load_image('Grass_2.png')
+grass_3 = load_image('Grass_3.png')
+plants_group = load_image('plants_group.png')
+high_rock = load_image('rock_h.png')
+stalagmites = load_image('stalagmites.png')
+rock_3 = load_image('rock_3.png')
+rock_4 = load_image('rock_4.png')
+sharp_columns = load_image('sharp_columns.png')
+tile_images_for_third_level = {
+    'wall': earth_3,
+    'hill': hill,
+    'rock_1': rock_1,
+    'rock_2': rock_2,
+    'small_pl': small_pl,
+    'grass': grass,
+    'grass_2': grass_2,
+    'grass_3': grass_3,
+    'plants_group': plants_group,
+    'high_rock': high_rock,
+    'stalagmites': stalagmites,
+    'rock_3': rock_3,
+    'rock_4': rock_4,
+    'sharp_columns': sharp_columns
+}
 player_image = idle
 
 tile_width = 100
@@ -156,49 +186,11 @@ class Tile(pygame.sprite.Sprite):
             self.image = tile_images_for_first_level[tile_type]
         elif current_level == 2:
             self.image = tile_images_for_second_level[tile_type]
+        elif current_level == 3:
+            self.image = tile_images_for_third_level[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
 
-
-# class Player(pygame.sprite.Sprite):
-#     a = load_image('idle.png')
-#     image = pygame.transform.scale(a, (200, 200))
-#
-#     def __init__(self, *groups):
-#         super().__init__(player_group, all_sprites)
-#         self.image = Player.image
-#         self.rect = self.image.get_rect()
-#         self.rect.x = 200
-#         self.rect.y = 810
-#         self.moving = True
-#         self.isjump = False
-#         self.jumpcount = 10
-#
-#     def update(self, *args, **kwargs):
-#         keys = pygame.key.get_pressed()
-#         # if keys[pygame.K_UP] and self.rect.y > 50:
-#         #     # self.rect = self.rect.move(random.randint(-1, 1),
-#         #     #                            random.randint(-1, 1))
-#         #     self.rect.y -= 10
-#         if keys[pygame.K_LEFT] and self.rect.x:  # > -10:
-#             self.rect.x -= 15
-#         if keys[pygame.K_RIGHT] and self.rect.x:  # < 1900:
-#             self.rect.x += 15
-#         if not(self.isjump):
-#             if keys[pygame.K_DOWN] and self.rect.y < 800:
-#                 self.rect.y += 15
-#             if keys[pygame.K_UP]:
-#                 self.isjump = True
-#         else:
-#             if self.jumpcount >= -10:
-#                 if self.jumpcount < 0:
-#                     self.rect.y += (self.jumpcount ** 2) // 2
-#                 else:
-#                     self.rect.y -= (self.jumpcount ** 2) // 2
-#                 self.jumpcount -= 1
-#             else:
-#                 self.isjump = False
-#                 self.jumpcount = 10
 
 class Player(pygame.sprite.Sprite):
     right = True
@@ -258,23 +250,6 @@ class Player(pygame.sprite.Sprite):
             self.rect.y = height - self.rect.height
 
 
-# class NPC_One(pygame.sprite.Sprite):
-#     dx = (tile_width - player_image.get_width()) // 2
-#     dy = (tile_height - player_image.get_height()) // 4
-#
-#     # def __init__(self, pers_groups):
-#     #     super().__init__(pers_groups)
-#     #     self.image = NPC_One.image
-#     #     self.rect = self.image.get_rect()
-#
-#     def __init__(self, pos_x, pos_y):
-#         image3 = load_image('witch.png')
-#         super().__init__(player_group, all_sprites)
-#         self.image = image3
-#         self.rect = self.image.get_rect().move(tile_width * pos_x + Player.dx,
-#                                                tile_height * (pos_y - 0.5) + Player.dy)
-
-
 pers_groups = pygame.sprite.Group()
 
 
@@ -288,6 +263,7 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '*':
                 Tile('pit', x, 21.6)
+            elif level[y][x] == '%':
                 new_player = Player(x, y)
             elif level[y][x] == "[":
                 Tile('barrel', x, 24.1)
@@ -367,9 +343,45 @@ def generate_level_2(level):
                 Tile('plant_6', x, 16)
             elif level[y][x] == '!':
                 Tile('plant_7', x, 19)
-
-
     return new_player, x, y
+
+
+def generate_level_3(level):
+    new_player, x, y = None, None, None
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '%':
+                new_player = Player(x, 24.5)
+            elif level[y][x] == '#':
+                Tile('wall', x, 24.5)
+            elif level[y][x] == 'h':
+                Tile('hill', x, 22.3)
+            elif level[y][x] == 'r':
+                Tile('rock_1', x, 22)
+            elif level[y][x] == ']':
+                Tile('rock_2', x, 14)
+            elif level[y][x] == '[':
+                Tile('small_pl', x, 21.5)
+            elif level[y][x] == '^':
+                Tile('grass', x, 21.5)
+            elif level[y][x] == '_':
+                Tile('grass_2', x, 17)
+            elif level[y][x] == '-':
+                Tile('grass_3', x, 8)
+            elif level[y][x] == 'p':
+                Tile('plants_group', x, 21.5)
+            elif level[y][x] == 'u':
+                Tile('high_rock', x, 10)
+            elif level[y][x] == 's':
+                Tile('stalagmites', x, 15)
+            elif level[y][x] == '3':
+                Tile('rock_3', x, 16)
+            elif level[y][x] == '4':
+                Tile('rock_4', x, 17)
+            elif level[y][x] == 'k':
+                Tile('sharp_columns', x, 15)
+    return new_player, x, y
+
 
 all_sprites = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
@@ -447,6 +459,8 @@ if current_level == 1:
     player, level_x, level_y = generate_level(load_level('map.txt'))
 elif current_level == 2:
     player, lavel_x, level_y = generate_level_2(load_level('map_2.txt'))
+elif current_level == 3:
+    player, lavel_x, level_y = generate_level_3(load_level('map_3.txt'))
 camera = Camera()
 start_screen()
 while True:
@@ -455,6 +469,8 @@ while True:
         bg = load_image('b3_first.jpg')
     elif current_level == 2:
         bg = load_image('fon_2lvl.jpg')
+    elif current_level == 3:
+        bg = load_image('fon5.jpg')
     bg1 = pygame.transform.scale(bg, (width, height))
     for event in pygame.event.get():
         all_sprites.update(event)
