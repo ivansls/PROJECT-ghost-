@@ -1,6 +1,6 @@
-from moviepy.editor import *
 import pygame
 import os
+import sys
 
 FPS = 120
 pygame.init()
@@ -9,6 +9,11 @@ screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 current_level = 1
 anim_sprite = pygame.sprite.Group()
+jump_sound = pygame.mixer.Sound('data/music/jump.mp3')
+jump_sound.set_volume(0.5)
+first_level_music = pygame.mixer.Sound('data/music/first_level.mp3')
+second_level_music = pygame.mixer.Sound('data/music/second_level.mp3')
+third_level_music = pygame.mixer.Sound('data/music/third_level.mp3')
 
 
 def load_image(name, color_key=None):
@@ -38,7 +43,6 @@ def load_level(filename):
     # дополняем каждую строку пустыми клетками ('.')
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
-
 class AnimatedSprite(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y, fps):
         super().__init__(anim_sprite)
@@ -57,15 +61,13 @@ class AnimatedSprite(pygame.sprite.Sprite):
                 frame_location = (self.rect.w * j, self.rect.h * i)
                 self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
 
-    def update(self):
+    def update(self, *args, **kwargs):
         self.counter += 1
         if self.counter == self.limit:
             self.counter = 0
             self.cur_frame = (self.cur_frame + 1) % len(self.frames)
             self.image = self.frames[self.cur_frame]
 
-
-dragon = AnimatedSprite(load_image("B_witch_idle.png"), 1, 6, 50, 50, 10)
 
 collaid = load_image('Tile_02.png')
 earth = pygame.transform.scale(collaid, (100, 100))
@@ -89,6 +91,10 @@ pumpkins = pygame.transform.scale(load_image('pumpkins.png'), (150, 100))
 signpost = pygame.transform.scale(load_image('signpost.png'), (80, 150))
 house1 = load_image('house2.png')
 house2 = load_image('house3.png')
+b = load_image('Grass.png')
+block = pygame.transform.scale(b, (150, 400))
+b2 = load_image('Grass.png')
+block2 = pygame.transform.scale(b2, (150, 400))
 witch = load_image('witch.png')
 witch1 = pygame.transform.scale(witch, (100, 100))
 tile_images_for_first_level = {
@@ -174,6 +180,9 @@ tile_images_for_third_level = {
     'sharp_columns': sharp_columns
 }
 player_image = idle
+block_image = block
+block_image2 = block2
+block = 0
 
 tile_width = 100
 tile_height = 50
@@ -193,15 +202,17 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Player(pygame.sprite.Sprite):
+    global block
+    global block2
     right = True
     dx = (tile_width - player_image.get_width()) // 2
     dy = (tile_height - player_image.get_height()) // 4
-
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
         self.image = player_image
         self.rect = self.image.get_rect().move(tile_width * pos_x + Player.dx,
                                                tile_height * (pos_y - 0.5) + Player.dy)
+        self.mask = pygame.mask.from_surface(self.image)
         self.moving = True
         self.isjump = False
         self.jumpcount = 10
@@ -209,32 +220,56 @@ class Player(pygame.sprite.Sprite):
     def update(self, *args, **kwargs):
         keys = pygame.key.get_pressed()
         # self.calc_grav()
-        if keys[pygame.K_LEFT] and self.rect.x:  # > -10:
-            self.rect.x -= 15
-            if self.right:
-                self.flip()
-                self.right = False
-        if keys[pygame.K_RIGHT] and self.rect.x:  # < 1900:
-            self.rect.x += 15
-            if not self.right:
-                self.flip()
-                self.right = True
-
-        if not self.isjump:
-            if keys[pygame.K_DOWN] and self.rect.y:
-                self.rect.y += 15
-            if keys[pygame.K_UP]:
-                self.isjump = True
-        else:
-            if self.jumpcount >= -10:
-                if self.jumpcount < 0:
-                    self.rect.y += (self.jumpcount ** 2) // 2
+        if pygame.sprite.collide_mask(self, block):
+            if keys[pygame.K_RIGHT]:  # < 1900:
+                if keys[pygame.K_RIGHT] and keys[pygame.K_w]:
+                    self.rect.x += 30
                 else:
-                    self.rect.y -= (self.jumpcount ** 2) // 2
-                self.jumpcount -= 1
+                    self.rect.x += 15
+                if not self.right:
+                    self.flip()
+                    self.right = True
+        elif pygame.sprite.collide_mask(self, block2):
+            if keys[pygame.K_LEFT]:
+                if keys[pygame.K_LEFT] and keys[pygame.K_w]:
+                    self.rect.x -= 30
+                else:
+                    self.rect.x -= 15
+                if self.right:
+                    self.flip()
+                    self.right = False
+        else:
+            if keys[pygame.K_LEFT]:
+                if keys[pygame.K_LEFT] and keys[pygame.K_w]:
+                    self.rect.x -= 30
+                else:
+                    self.rect.x -= 15
+                if self.right:
+                    self.flip()
+                    self.right = False
+            if keys[pygame.K_RIGHT]:  # < 1900:
+                if keys[pygame.K_RIGHT] and keys[pygame.K_w]:
+                    self.rect.x += 30
+                else:
+                    self.rect.x += 15
+                if not self.right:
+                    self.flip()
+                    self.right = True
+
+            if not self.isjump:
+                if keys[pygame.K_UP]:
+                    self.isjump = True
             else:
-                self.isjump = False
-                self.jumpcount = 10
+                jump_sound.play()
+                if self.jumpcount >= -10:
+                    if self.jumpcount < 0:
+                        self.rect.y += (self.jumpcount ** 2) // 2
+                    else:
+                        self.rect.y -= (self.jumpcount ** 2) // 2
+                    self.jumpcount -= 1
+                else:
+                    self.isjump = False
+                    self.jumpcount = 10
 
     def flip(self):
         self.image = pygame.transform.flip(self.image, True, False)
@@ -251,9 +286,14 @@ class Player(pygame.sprite.Sprite):
 
 pers_groups = pygame.sprite.Group()
 
+rect = 0
+
 
 def generate_level(level):
     new_player, x, y = None, None, None
+    global block
+    global block2
+    global rect
     for y in range(len(level)):
         for x in range(len(level[y])):
             # if level[y][x] == '.':
@@ -299,18 +339,26 @@ def generate_level(level):
             elif level[y][x] == "v":
                 Tile('small_accurate_tree', x, 21.5)
             elif level[y][x] == "w":
-                # a = AnimatedSprite(witch1, 1, 6, x, 23.31, 10)
+                #     Tile("witch", x, 23.31, )
                 Tile("witch", x, 23.31)
+            elif level[y][x] == 'g':
+                block = Block(x, y - 2.9)
+            elif level[y][x] == 'z':
+                block2 = Block2(x - 0.7, y - 2.9)
     # вернем игрока, а также размер поля в клетках
+    rect = x, y
     return new_player, x, y
 
 
 def generate_level_2(level):
     new_player, x, y = None, None, None
+    global block
+    global block2
     for y in range(len(level)):
         for x in range(len(level[y])):
             # if level[y][x] == '.':
-            #     Tile('empty', x, y)
+            #    global block
+            #     global block2 Tile('empty', x, y)
             # new_player = Player(x, y)
             if level[y][x] == '%':
                 new_player = Player(x, 24.5)
@@ -342,11 +390,17 @@ def generate_level_2(level):
                 Tile('plant_6', x, 16)
             elif level[y][x] == '!':
                 Tile('plant_7', x, 19)
+            elif level[y][x] == 'g':
+                block = Block(x, y - 2.5)
+            elif level[y][x] == 'z':
+                block2 = Block2(x, y - 2.5)
     return new_player, x, y
 
 
 def generate_level_3(level):
     new_player, x, y = None, None, None
+    global block
+    global block2
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '%':
@@ -379,6 +433,10 @@ def generate_level_3(level):
                 Tile('rock_4', x, 17)
             elif level[y][x] == 'k':
                 Tile('sharp_columns', x, 15)
+            elif level[y][x] == 'g':
+                block = Block(x, y - 2.5)
+            elif level[y][x] == 'z':
+                block2 = Block2(x, y - 2.5)
     return new_player, x, y
 
 
@@ -432,6 +490,13 @@ def message_to_screen(msg, color, y_displace=0, greatness='small'):
 
 
 def start_screen():
+    c = pygame.image.load('data/cursor.png')
+    cursor = pygame.transform.flip(c, True, False)
+    pygame.mouse.set_visible(False)  # hide the cursor
+
+    pygame.mixer.music.load('data/music/3.mp3')
+    pygame.mixer.music.play(fade_ms=60)
+    a = pygame.mixer.Sound('data/music/perehod.wav')
     while True:
         keys = pygame.key.get_pressed()
         screen.fill('black')
@@ -449,15 +514,96 @@ def start_screen():
             if keys[pygame.K_ESCAPE] or event.type == pygame.QUIT:
                 terminate()
             if keys[pygame.K_y]:
+                pygame.mixer.music.stop()
+                a.play()
+                a.set_volume(0.5)
+                first_level_music.play()
+                first_level_music.set_volume(0.5)
                 return
+        coord = pygame.mouse.get_pos()
+        screen.blit(cursor, coord)
         pygame.display.flip()
         clock.tick(FPS)
 
 
-def Dialog_One(player, npc):
-    if npc.rect.x - player.rect.x == 2:
-        pass
+block_group = pygame.sprite.Group()
 
+
+class Block(pygame.sprite.Sprite):
+    dx = (tile_width - block_image.get_width()) // 2
+    dy = (tile_height - block_image.get_height()) // 4
+    def __init__(self, pos_x, pos_y):
+        super().__init__(block_group, all_sprites)
+        self.image = block_image
+        self.rect = self.image.get_rect().move(tile_width * pos_x + Block.dx,
+                                               tile_height * (pos_y - 0.5) + Block.dy)
+        self.mask = pygame.mask.from_surface(self.image)
+
+class Block2(pygame.sprite.Sprite):
+    dx = (tile_width - block_image2.get_width()) // 2
+    dy = (tile_height - block_image2.get_height()) // 4
+    def __init__(self, pos_x, pos_y):
+        super().__init__(block_group, all_sprites)
+        self.image = block_image2
+        self.rect = self.image.get_rect().move(tile_width * pos_x + Block2.dx,
+                                               tile_height * (pos_y - 0.5) + Block2.dy)
+        self.mask = pygame.mask.from_surface(self.image)
+
+def draw():
+    # pygame.draw.rect(screen, (255, 255, 255),
+    #                  (200, 200, 500, 180))
+    witch_anim = load_image('anim/B_witch_idle.png')
+    witch1_anim = pygame.transform.scale(witch_anim, (64, 576))
+    fantasywarrior = load_image("anim/fantasywarrior.png")
+    fantasywarrior2 = pygame.transform.scale(fantasywarrior, (3240, 324))
+    medievalwarrior_blue = load_image("anim/medievalwarrior(blue).png")
+    medievalwarrior_blue2 = pygame.transform.scale(medievalwarrior_blue, (2700, 270))
+    medievalwarrior_gray = load_image("anim/medievalwarrior(gray).png")
+    medievalwarrior_gray2 = pygame.transform.scale(medievalwarrior_gray, (1472, 182))
+    medievalwarrior_red = load_image("anim/medievalwarrior(red).png")
+    medievalwarrior_red2 = pygame.transform.scale(medievalwarrior_red, (2400, 300))
+    spr_KingIdle_strip_no_bkg = load_image("anim/spr_KingIdle_strip_no_bkg.png")
+    spr_KingIdle_strip_no_bkg2 = pygame.transform.scale(spr_KingIdle_strip_no_bkg, (4608, 256))
+    wizard = load_image("anim/wizard.png")
+    img = load_image("anim/spritesheet.png")
+    img2 = pygame.transform.scale(img, (300, 100))
+    AnimatedSprite(img2, 3, 1, 210, 800, 4)
+    AnimatedSprite(witch1_anim, 1, 6, 380, 820, 6)
+    AnimatedSprite(fantasywarrior2, 10, 1, 460, 700, 10)
+    AnimatedSprite(medievalwarrior_blue2, 10, 1, 700, 735, 10)
+    AnimatedSprite(medievalwarrior_gray2, 6, 1, 920, 740, 10)
+    AnimatedSprite(medievalwarrior_red2, 8, 1, 1100, 720, 10)
+    AnimatedSprite(spr_KingIdle_strip_no_bkg2, 18, 1, 1320, 760, 10)
+    AnimatedSprite(wizard, 6, 1, 1540, 770, 6)
+
+
+def victory_screen():
+    draw()
+    first_level_music.stop()
+    second_level_music.stop()
+    third_level_music.stop()
+    pygame.mixer.music.load('data/music/2.mp3')
+    pygame.mixer.music.play(start=56.8)
+    while True:
+        keys = pygame.key.get_pressed()
+        screen.fill((193, 0, 32))
+        message_to_screen('Thanks for playing!',
+                          'white',
+                          -100,
+                          'large')
+        message_to_screen('You did it!!!',
+                          'white',
+                          -30)
+        message_to_screen('Press esc to quit.',
+                          'white',
+                          180)
+        for event in pygame.event.get():
+            if keys[pygame.K_ESCAPE] or event.type == pygame.QUIT:
+                terminate()
+        anim_sprite.draw(screen)
+        anim_sprite.update()
+        pygame.display.flip()
+        clock.tick(FPS)
 
 
 if current_level == 1:
@@ -468,6 +614,7 @@ elif current_level == 3:
     player, lavel_x, level_y = generate_level_3(load_level('map_3.txt'))
 camera = Camera()
 start_screen()
+pygame.mouse.set_visible(False)
 while True:
     keys = pygame.key.get_pressed()
     if current_level == 1:
@@ -478,35 +625,64 @@ while True:
         bg = load_image('fon5.jpg')
     bg1 = pygame.transform.scale(bg, (width, height))
     for event in pygame.event.get():
-        all_sprites.update(event)
+        # all_sprites.update(event)
         if event.type == pygame.QUIT:
             terminate()
         if keys[pygame.K_ESCAPE]:
+            victory_screen()
             terminate()
         if keys[pygame.K_1]:
             current_level = 1
+            first_level_music.stop()
+            third_level_music.stop()
             tiles_group.empty()
             player.kill()
+            block_group.empty()
             player, level_x, level_y = generate_level(load_level('map.txt'))
         if keys[pygame.K_2]:
             current_level = 2
+            first_level_music.stop()
+            third_level_music.stop()
+            second_level_music.play()
             tiles_group.empty()
             player.kill()
+            block_group.empty()
             player, lavel_x, level_y = generate_level_2(load_level('map_2.txt'))
         if keys[pygame.K_3]:
             current_level = 3
+            second_level_music.stop()
+            first_level_music.stop()
+            third_level_music.play()
             tiles_group.empty()
             player.kill()
+            block_group.empty()
             player, lavel_x, level_y = generate_level_3(load_level('map_3.txt'))
         if event.type == pygame.KEYDOWN:
             player_group.update(event)
     screen.blit(bg1, (0, 0))
     camera.update(player)
+    if keys[pygame.K_SPACE]:
+        fontObj = pygame.font.Font('freesansbold.ttf', 50)
+        textSurfaceObj = fontObj.render('Hello world!', True, (0, 0, 0))
+        textSurfaceObj2 = fontObj.render('Hello wor', True, (0, 0, 0))
+        textRectObj = textSurfaceObj.get_rect()
+        textRectObj2 = textSurfaceObj2.get_rect()
+        textRectObj.center = (500, 400)
+        textRectObj2.center = (500, 400)
+        i = 0
+        if keys[pygame.K_RETURN]:
+            screen.blit(textSurfaceObj, textRectObj)
+            i += 1
+
+        if i == 1:
+            screen.blit(textSurfaceObj2, textRectObj2)
+
     for sprite in all_sprites:
         camera.apply(sprite)
     all_sprites.update()
     tiles_group.draw(screen)
     player_group.draw(screen)
+    block_group.draw(screen)
     pygame.display.flip()
     anim_sprite.draw(screen)
     anim_sprite.update()
