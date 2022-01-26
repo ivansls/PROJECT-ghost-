@@ -9,13 +9,13 @@ screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 current_level = 1
 anim_sprite = pygame.sprite.Group()
-first_level_music = pygame.mixer.Sound('data/music/first_level.mp3')  # добавляем в микшер музыку всех уровней
-second_level_music = pygame.mixer.Sound('data/music/second_level.mp3')
-third_level_music = pygame.mixer.Sound('data/music/third_level.mp3')
+first_level_music = pygame.mixer.Sound('../../Downloads/124qtsdgd/data/music/first_level.mp3')  # добавляем в микшер музыку всех уровней
+second_level_music = pygame.mixer.Sound('../../Downloads/124qtsdgd/data/music/second_level.mp3')
+third_level_music = pygame.mixer.Sound('../../Downloads/124qtsdgd/data/music/third_level.mp3')
 
 
 def load_image(name, color_key=None):  # Функция загрузки изображений
-    full_name = os.path.join('data', name)
+    full_name = os.path.join('../../Downloads/124qtsdgd/data', name)
     if not os.path.isfile(full_name):
         raise FileNotFoundError(f"Файл {full_name} не найден")
     image = pygame.image.load(full_name)
@@ -30,7 +30,7 @@ def load_image(name, color_key=None):  # Функция загрузки изо�
 
 
 def load_level(filename):  # Функция загрузки уровней
-    filename = os.path.join("data", filename)
+    filename = os.path.join("../../Downloads/124qtsdgd/data", filename)
     # читаем уровень, убирая символы перевода строки
     with open(filename) as map_file:
         level_map = [line.strip() for line in map_file]
@@ -472,13 +472,13 @@ def message_to_screen(msg, color, y_displace=0, greatness='small'):  # Отоб�
 
 
 def start_screen():  # Экран начала игры
-    c = pygame.image.load('data/cursor.png')  # Загрузка нового изображения курсора
+    c = pygame.image.load('../../Downloads/124qtsdgd/data/cursor.png')  # Загрузка нового изображения курсора
     cursor = pygame.transform.flip(c, True, False)
     pygame.mouse.set_visible(False)  # hide the cursor
 
-    pygame.mixer.music.load('data/music/3.mp3')
-    pygame.mixer.music.play(fade_ms=60)
-    a = pygame.mixer.Sound('data/music/perehod.wav')  # Запуск музыки
+    pygame.mixer.music.load('../../Downloads/124qtsdgd/data/music/3.mp3')
+    pygame.mixer.music.play(loops=-1, fade_ms=60)
+    a = pygame.mixer.Sound('../../Downloads/124qtsdgd/data/music/perehod.wav')  # Запуск музыки
     while True:
         keys = pygame.key.get_pressed()
         screen.fill('black')
@@ -499,7 +499,7 @@ def start_screen():  # Экран начала игры
                 pygame.mixer.music.stop()
                 a.play()
                 a.set_volume(0.5)
-                first_level_music.play()
+                first_level_music.play(loops=-1)
                 first_level_music.set_volume(0.5)
                 return
         coord = pygame.mouse.get_pos()
@@ -566,8 +566,8 @@ def victory_screen():  # Экран завершения игры
     first_level_music.stop()
     second_level_music.stop()
     third_level_music.stop()
-    pygame.mixer.music.load('data/music/2.mp3')
-    pygame.mixer.music.play(start=56.8)  # Включение музыки
+    pygame.mixer.music.load('../../Downloads/124qtsdgd/data/music/2.mp3')
+    pygame.mixer.music.play(loops=-1, start=56.8)  # Включение музыки
     while True:
         keys = pygame.key.get_pressed()
         screen.fill((193, 0, 32))
@@ -623,7 +623,7 @@ while True:
             current_level = 2
             first_level_music.stop()
             third_level_music.stop()
-            second_level_music.play()
+            second_level_music.play(loops=-1)
             tiles_group.empty()
             player.kill()
             block_group.empty()
@@ -632,7 +632,7 @@ while True:
             current_level = 3
             second_level_music.stop()
             first_level_music.stop()
-            third_level_music.play()
+            third_level_music.play(loops=-1)
             tiles_group.empty()
             player.kill()
             block_group.empty()
