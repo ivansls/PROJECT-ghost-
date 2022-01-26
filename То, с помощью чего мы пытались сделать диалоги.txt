@@ -1,0 +1,3 @@
+# Если кому-то интересно то, как мы пытались это сделать, прикрепляю ссылки:
+# Видео на Ютубе https://youtu.be/Mp57mHfOXTw
+# Код с этого видоса https://github.com/scartwright91/pygame-tutorials - здесь вам нужна папка cut_scenes
